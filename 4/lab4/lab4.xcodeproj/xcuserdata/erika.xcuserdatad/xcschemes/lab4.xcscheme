@@ -77,7 +77,7 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-num_shadow_samples 20"
+            argument = "-num_shadow_samples 2"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument

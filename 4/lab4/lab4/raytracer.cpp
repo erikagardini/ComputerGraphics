@@ -19,47 +19,47 @@ RayTracer::CastRay (Ray & ray, Hit & h, bool use_sphere_patches) const
   // intersect each of the quads
   for (int i = 0; i < mesh->numQuadFaces (); i++)
   {
-	Face *f = mesh->getFace (i);
-	if (f->intersect (ray, h, args->intersect_backfacing))
-	{
-		if( h.getT() < nearest.getT() )
-		{
-			answer = true;
-			nearest = h;
-		}
-	}
+    Face *f = mesh->getFace (i);
+    if (f->intersect (ray, h, args->intersect_backfacing))
+    {
+        if( h.getT() < nearest.getT() )
+        {
+            answer = true;
+            nearest = h;
+        }
+    }
   }
 
   // intersect each of the spheres (either the patches, or the original spheres)
   if (use_sphere_patches)
   {
-	for (int i = mesh->numQuadFaces (); i < mesh->numFaces (); i++)
-	{
-	  Face *f = mesh->getFace (i);
-	  if (f->intersect (ray, h, args->intersect_backfacing))
-	  {
-		if( h.getT() < nearest.getT() )
-		{
-			answer = true;
-			nearest = h;
-		}
-	  }
-	}
+    for (int i = mesh->numQuadFaces (); i < mesh->numFaces (); i++)
+    {
+      Face *f = mesh->getFace (i);
+      if (f->intersect (ray, h, args->intersect_backfacing))
+      {
+        if( h.getT() < nearest.getT() )
+        {
+            answer = true;
+            nearest = h;
+        }
+      }
+    }
   }
   else
   {
-	const vector < Sphere * >&spheres = mesh->getSpheres ();
-	for (unsigned int i = 0; i < spheres.size (); i++)
-	{
-	  if (spheres[i]->intersect (ray, h))
-	  {
-		if( h.getT() < nearest.getT() )
-		{
-			answer = true;
-			nearest = h;
-		}
-	  }
-	}
+    const vector < Sphere * >&spheres = mesh->getSpheres ();
+    for (unsigned int i = 0; i < spheres.size (); i++)
+    {
+      if (spheres[i]->intersect (ray, h))
+      {
+        if( h.getT() < nearest.getT() )
+        {
+            answer = true;
+            nearest = h;
+        }
+      }
+    }
   }
 
   h = nearest;
@@ -74,9 +74,9 @@ RayTracer::TraceRay (Ray & ray, Hit & hit, int bounce_count) const
   bool intersect = CastRay (ray, hit, false);
 
   if( bounce_count == args->num_bounces )
-  	RayTree::SetMainSegment (ray, 0, hit.getT ());
+      RayTree::SetMainSegment (ray, 0, hit.getT ());
   else
-	RayTree::AddReflectedSegment(ray, 0, hit.getT());
+    RayTree::AddReflectedSegment(ray, 0, hit.getT());
 
 //carichiamo il background perchè questo c'è a prescindere
   Vec3f answer = args->background_color;
@@ -84,42 +84,34 @@ RayTracer::TraceRay (Ray & ray, Hit & hit, int bounce_count) const
   if (intersect == true)
   {
     Material *m = hit.getMaterial ();
-	assert (m != NULL);
-	Vec3f normal = hit.getNormal ();
-	Vec3f point = ray.pointAtParameter (hit.getT ());
+    assert (m != NULL);
+    Vec3f normal = hit.getNormal ();
+    Vec3f point = ray.pointAtParameter (hit.getT ());
 
-	answer = args->ambient_light * m->getDiffuseColor ();
+    answer = args->ambient_light * m->getDiffuseColor ();
 
-    Vec3f reflectiveColor = m->getReflectiveColor ();
-      if(reflectiveColor.Length() != 0 && bounce_count > 0){
-          Vec3f rayVector = ray.getOrigin();
-          Vec3f reflection = (2 * normal.Dot3(rayVector) * normal) - rayVector;
-          reflection.Normalize();
-          Ray ray = Ray(point, reflection);
-          answer += TraceRay(ray, hit, bounce_count - 1);
-          answer = answer * reflectiveColor;
-      }
 
-	int num_lights = mesh->getLights().size ();
-      Vec3f pointOnLight;
-      Vec3f dirToLight;
-      Vec3f lightColor;
+
+    int num_lights = mesh->getLights().size ();
+//      Vec3f pointOnLight;
+//      Vec3f dirToLight;
+//      Vec3f lightColor;
       int j;
-	for (int i = 0; i < num_lights; i++)
-	{
+    for (int i = 0; i < num_lights; i++)
+    {
         Face *f = mesh->getLights ()[i];
         int num_shadows = args->num_shadow_samples;
         if(num_shadows == 0){
-            pointOnLight = f->computeCentroid ();
-            dirToLight = pointOnLight - point;
+            Vec3f pointOnLight = f->computeCentroid ();
+            Vec3f dirToLight = pointOnLight - point;
             dirToLight.Normalize ();
             if (normal.Dot3 (dirToLight) > 0){
-                lightColor = 0.2 * f->getMaterial()->getEmittedColor() * f->getArea ();
+                Vec3f lightColor = 0.2 * f->getMaterial()->getEmittedColor() * f->getArea ();
                 answer += m->Shade (ray, hit, dirToLight, lightColor, args);
             }
         }else if(num_shadows == 1 || f->getArea() == 0){
-            pointOnLight = f->computeCentroid ();
-            dirToLight = pointOnLight - point;
+            Vec3f pointOnLight = f->computeCentroid ();
+            Vec3f dirToLight = pointOnLight - point;
             dirToLight.Normalize ();
             Ray *shadowRay = new Ray(point, dirToLight);
             Hit *newHit = new Hit();
@@ -138,8 +130,8 @@ RayTracer::TraceRay (Ray & ray, Hit & hit, int bounce_count) const
         }else{
             Vec3f answer1;
             for(j = 0; j < num_shadows; j++){
-                pointOnLight = f->RandomPoint();
-                dirToLight = pointOnLight - point;
+                Vec3f pointOnLight = f->RandomPoint();
+                Vec3f dirToLight = pointOnLight - point;
                 dirToLight.Normalize ();
                 Ray *shadowRay = new Ray(point, dirToLight);
                 Hit *newHit = new Hit();
@@ -159,15 +151,20 @@ RayTracer::TraceRay (Ray & ray, Hit & hit, int bounce_count) const
             answer1 /= num_shadows;
             answer += answer1;
         }
-       
-        
-        
-            
-            
+
         }
-	  
-	  
-    
+
+      Vec3f reflectiveColor = m->getReflectiveColor ();
+      if(reflectiveColor.Length() != 0 && bounce_count > 0){
+          Vec3f rayVector = ray.getOrigin();
+          Vec3f reflection = (2 * normal.Dot3(rayVector) * normal) - rayVector;
+          reflection.Normalize();
+          Ray ray = Ray(point, reflection);
+          answer += TraceRay(ray, hit, bounce_count - 1);
+          answer = answer * reflectiveColor;
+      }
+
   }
   return answer;
 }
+
